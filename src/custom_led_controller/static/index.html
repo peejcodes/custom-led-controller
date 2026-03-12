@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Custom LED Controller</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/static/styles.css?v=4" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail">
+      <div class="rail-brand">
+        <span class="brand-mark">CLC</span>
+        <span class="brand-sub">LED CONTROL</span>
+      </div>
+
+      <nav class="rail-nav">
+        <button class="rail-button active" data-page="home">
+          <span class="rail-icon">⌂</span>
+          <span class="rail-label">Home</span>
+        </button>
+        <button class="rail-button" data-page="palette">
+          <span class="rail-icon">◉</span>
+          <span class="rail-label">Palette</span>
+        </button>
+        <button class="rail-button" data-page="controllers">
+          <span class="rail-icon">▤</span>
+          <span class="rail-label">Controllers</span>
+        </button>
+        <button class="rail-button" data-page="setup">
+          <span class="rail-icon">≣</span>
+          <span class="rail-label">Setup</span>
+        </button>
+        <button class="rail-button" data-page="advanced">
+          <span class="rail-icon">{ }</span>
+          <span class="rail-label">Advanced</span>
+        </button>
+      </nav>
+
+      <div class="rail-footer">
+        <button id="refreshProject" class="rail-action">Refresh</button>
+        <button id="saveProject" class="rail-action primary">Save</button>
+        <button id="resetProject" class="rail-action danger">Reset</button>
+      </div>
+    </aside>
+
+    <div class="stage">
+      <header class="statusbar">
+        <div>
+          <p class="eyebrow">Custom LED Controller</p>
+          <h1 id="projectName">Custom LED Controller</h1>
+        </div>
+
+        <div class="status-cluster">
+          <div class="mini-stat">
+            <span class="mini-label">Pattern</span>
+            <strong id="activePatternName">—</strong>
+          </div>
+          <div class="mini-stat">
+            <span class="mini-label">Controllers</span>
+            <strong id="connectedCount">0 / 0</strong>
+          </div>
+          <div class="mini-stat">
+            <span class="mini-label">LEDs</span>
+            <strong id="totalLedCount">0</strong>
+          </div>
+          <div class="status-pill" id="statusText">Loading…</div>
+        </div>
+      </header>
+
+      <main class="pages">
+        <section class="page active" data-page="home">
+          <div class="home-screen">
+            <section class="hero panel">
+              <div class="hero-copy">
+                <div>
+                  <p class="eyebrow">Now controlling</p>
+                  <h2 id="heroPatternTitle">Rainbow</h2>
+                  <p class="hero-meta" id="heroMeta">0 controllers · 0 LEDs · 0 zones</p>
+                </div>
+                <button class="ghost-button" data-goto="controllers">Device view</button>
+              </div>
+
+              <div class="hero-canvas-shell">
+                <canvas id="previewCanvas"></canvas>
+              </div>
+            </section>
+
+            <aside class="side-column">
+              <section class="panel quick-panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Playback</p>
+                    <h3>Quick controls</h3>
+                  </div>
+                </div>
+
+                <div class="control-stack">
+                  <label class="control-card">
+                    <span>Frame rate</span>
+                    <div class="control-row">
+                      <input id="fps" type="range" min="5" max="60" step="1" />
+                      <strong id="fpsValue">30 FPS</strong>
+                    </div>
+                  </label>
+
+                  <label class="control-card">
+                    <span>Speed</span>
+                    <div class="control-row">
+                      <input id="speed" type="range" min="0.1" max="10" step="0.1" />
+                      <strong id="speedValue">1.0x</strong>
+                    </div>
+                  </label>
+
+                  <label class="control-card">
+                    <span>Brightness</span>
+                    <div class="control-row">
+                      <input id="brightness" type="range" min="0" max="1" step="0.01" />
+                      <strong id="brightnessValue">0.75</strong>
+                    </div>
+                  </label>
+                </div>
+              </section>
+
+              <section class="panel summary-panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">System</p>
+                    <h3>At a glance</h3>
+                  </div>
+                </div>
+                <div class="summary-grid">
+                  <div class="summary-tile">
+                    <span>Zones</span>
+                    <strong id="zoneCount">0</strong>
+                  </div>
+                  <div class="summary-tile">
+                    <span>Segments</span>
+                    <strong id="segmentCount">0</strong>
+                  </div>
+                  <div class="summary-tile">
+                    <span>Outputs</span>
+                    <strong id="outputCount">0</strong>
+                  </div>
+                  <div class="summary-tile">
+                    <span>Mode</span>
+                    <strong id="systemMode">Mock</strong>
+                  </div>
+                </div>
+              </section>
+            </aside>
+
+            <section class="dock panel">
+              <div class="dock-block">
+                <div class="dock-head">
+                  <div>
+                    <p class="eyebrow">Scene</p>
+                    <h3>Pattern select</h3>
+                  </div>
+                </div>
+                <div id="patternStrip" class="pattern-strip"></div>
+              </div>
+
+              <div class="dock-block">
+                <div class="dock-head">
+                  <div>
+                    <p class="eyebrow">Colors</p>
+                    <h3>Palette</h3>
+                  </div>
+                  <button class="ghost-button" data-goto="palette">Open palette</button>
+                </div>
+                <div id="homePalette" class="home-palette"></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="page" data-page="palette">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Color control</p>
+              <h2>Palette editor</h2>
+            </div>
+            <p class="page-copy">Edit slot names and colors. Changes update the preview immediately.</p>
+          </div>
+          <div id="paletteGrid" class="palette-grid"></div>
+        </section>
+
+        <section class="page" data-page="controllers">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Devices</p>
+              <h2>Controllers</h2>
+            </div>
+            <p class="page-copy">Connection state, outputs, pins, LED counts, and transport mode.</p>
+          </div>
+          <div id="controllers" class="controller-grid"></div>
+        </section>
+
+        <section class="page" data-page="setup">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Configuration</p>
+              <h2>Setup</h2>
+            </div>
+            <p class="page-copy">Create and edit controllers, outputs, segments, and zones with forms instead of raw JSON.</p>
+          </div>
+
+          <div class="setup-grid">
+            <section class="panel">
+              <div class="panel-header"><div><p class="eyebrow">Hardware</p><h3>Controllers</h3></div><button id="addController" class="ghost-button">Add controller</button></div>
+              <div id="setupControllers" class="setup-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header"><div><p class="eyebrow">Physical</p><h3>Outputs</h3></div><button id="addOutput" class="ghost-button">Add output</button></div>
+              <div id="setupOutputs" class="setup-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header"><div><p class="eyebrow">Physical</p><h3>Segments</h3></div><button id="addSegment" class="ghost-button">Add segment</button></div>
+              <div id="setupSegments" class="setup-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header"><div><p class="eyebrow">Logical</p><h3>Zones</h3></div><button id="addZone" class="ghost-button">Add zone</button></div>
+              <div id="setupZones" class="setup-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="page" data-page="advanced">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Advanced</p>
+              <h2>Project JSON</h2>
+            </div>
+            <p class="page-copy">For deep edits and bulk changes. Most setup can now be done in the Setup page.</p>
+          </div>
+
+          <section class="panel json-panel">
+            <textarea id="projectJson" spellcheck="false"></textarea>
+            <div class="json-actions">
+              <button id="applyJson" class="primary">Apply JSON</button>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="/static/app.js?v=4"></script>
+</body>
+</html>
