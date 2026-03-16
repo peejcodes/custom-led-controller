@@ -22,7 +22,7 @@ def default_project() -> ProjectConfig:
         ProjectConfig,
         RGBColor,
         SegmentConfig,
-        TransportMode,
+        
         ZoneConfig,
     )
 
@@ -32,7 +32,7 @@ def default_project() -> ProjectConfig:
             ControllerConfig(
                 id="ctrl-alpha",
                 name="Controller Alpha",
-                mode=TransportMode.MOCK,
+                mode="mock",
                 port="mock",
                 outputs=[
                     OutputConfig(id="out-a1", name="Left Rail", pin=2, led_count=60),
@@ -43,7 +43,7 @@ def default_project() -> ProjectConfig:
             ControllerConfig(
                 id="ctrl-bravo",
                 name="Controller Bravo",
-                mode=TransportMode.MOCK,
+                mode="mock",
                 port="mock",
                 outputs=[
                     OutputConfig(id="out-b1", name="Cargo", pin=5, led_count=120),
@@ -151,7 +151,7 @@ class RuntimeState:
         raise KeyError(f"Unknown controller: {controller_id}")
 
     def _build_transport(self, controller: ControllerConfig) -> BaseTransport:
-        if controller.mode == TransportMode.MOCK or controller.port == "mock":
+        if controller.mode == TransportMode.MOCK.value or controller.mode == TransportMode.MOCK or controller.port == "mock":
             return MockTransport(controller)
         return SerialTransport(controller)
 

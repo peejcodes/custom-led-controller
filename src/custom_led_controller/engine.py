@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import time
-from typing import Dict, List
 from .models import ControllerFrame, OutputFrame, ProjectConfig, RGBColor
-from .patterns import PATTERN_MAP
+from .patterns import resolve_pattern
 
 
 def _blank_output(length: int) -> list[RGBColor]:
@@ -13,7 +12,7 @@ def _blank_output(length: int) -> list[RGBColor]:
 class FrameRenderer:
     def render_project(self, project: ProjectConfig, seconds: float | None = None) -> list[ControllerFrame]:
         t = time.monotonic() if seconds is None else seconds
-        pattern_fn = PATTERN_MAP[project.playback.pattern]
+        pattern_fn = resolve_pattern(project.playback.pattern)
         frames: list[ControllerFrame] = []
 
         for controller in project.controllers:

@@ -394,32 +394,30 @@ input[type="range"] {
   gap: 12px;
 }
 
-.pattern-strip {
+
+.pattern-selector-card {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
-.pattern-chip {
+.pattern-selector-card select {
+  width: 100%;
+}
+
+.pattern-meta-card {
   border: 1px solid var(--border);
   border-radius: 18px;
-  min-height: 74px;
-  background: linear-gradient(180deg, rgba(17, 24, 35, 0.94), rgba(12, 18, 27, 0.88));
+  padding: 14px 16px;
+  background: linear-gradient(180deg, rgba(17, 24, 35, 0.92), rgba(12, 18, 27, 0.85));
   display: grid;
-  gap: 4px;
-  align-content: center;
-  text-align: left;
-  padding: 12px 14px;
-  cursor: pointer;
+  gap: 6px;
 }
 
-.pattern-chip.active {
-  border-color: rgba(98, 167, 255, 0.44);
-  background: linear-gradient(180deg, rgba(22, 45, 78, 0.95), rgba(14, 28, 51, 0.95));
+.pattern-meta-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
-
-.pattern-name { font-weight: 700; }
-.pattern-sub { color: var(--muted); font-size: 0.82rem; }
 
 .home-palette,
 .palette-grid {

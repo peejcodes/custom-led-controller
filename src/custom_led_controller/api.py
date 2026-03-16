@@ -9,14 +9,15 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import AppSettings
-from .models import ControllerStatus, PreviewResponse, ProjectConfig, ProjectSnapshot
+from .models import ControllerStatus, PatternDescriptor, PreviewResponse, ProjectConfig, ProjectSnapshot
+from .patterns import PATTERN_DESCRIPTORS
 from .runtime import RuntimeState
 
 
 def create_app(settings: AppSettings | None = None) -> FastAPI:
     settings = settings or AppSettings()
     runtime = RuntimeState(settings)
-    app = FastAPI(title="Custom LED Controller", version="0.1.0")
+    app = FastAPI(title="Custom LED Controller", version="0.2.0")
     app.state.runtime = runtime
 
     app.add_middleware(
@@ -41,6 +42,10 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
     @app.get("/api/health")
     async def health() -> dict:
         return {"ok": True, "time": time.time()}
+
+    @app.get("/api/patterns", response_model=list[PatternDescriptor])
+    async def get_patterns() -> list[PatternDescriptor]:
+        return PATTERN_DESCRIPTORS
 
     @app.get("/api/project", response_model=ProjectSnapshot)
     async def get_project() -> ProjectSnapshot:

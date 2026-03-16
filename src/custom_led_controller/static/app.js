@@ -7,18 +7,7 @@
     previewTimer: null,
     autosaveTimer: null,
     savePromise: null,
-  };
-
-  const patternOptions = ["solid", "chase", "pulse", "wave", "rainbow", "strobe", "fire", "rain"];
-  const patternDescriptions = {
-    solid: "Single color hold",
-    chase: "Motion across segments",
-    pulse: "Breathing fade effect",
-    wave: "Smooth travelling blend",
-    rainbow: "Full-spectrum sweep",
-    strobe: "Fast hard flashes",
-    fire: "Warm flicker glow",
-    rain: "Droplet motion effect",
+    patterns: [],
   };
 
   const refs = {};
@@ -29,8 +18,8 @@
     [
       "statusText", "previewCanvas", "projectName", "activePatternName", "connectedCount", "totalLedCount",
       "heroPatternTitle", "heroMeta", "zoneCount", "segmentCount", "outputCount", "systemMode",
-      "fps", "fpsValue", "speed", "speedValue", "brightness", "brightnessValue", "patternStrip",
-      "homePalette", "paletteGrid", "controllers", "projectJson", "refreshProject", "saveProject",
+      "fps", "fpsValue", "speed", "speedValue", "brightness", "brightnessValue", "patternSelect",
+      "patternSummaryTitle", "patternSummaryText", "homePalette", "paletteGrid", "controllers", "projectJson", "refreshProject", "saveProject",
       "resetProject", "applyJson", "addController", "addOutput", "addSegment", "addZone",
       "setupControllers", "setupOutputs", "setupSegments", "setupZones"
     ].forEach((id) => refs[id] = byId(id));
@@ -166,18 +155,61 @@
     }
   }
 
+
+  function activePatternDescriptor(patternId) {
+    return (state.patterns || []).find((item) => item.id === patternId) || null;
+  }
+
+  function renderPatternSelector(project) {
+    if (!refs.patternSelect) return;
+    const selected = project?.playback?.pattern || "rainbow";
+    const patterns = Array.isArray(state.patterns) && state.patterns.length
+      ? state.patterns
+      : [{ id: "rainbow", label: "Rainbow", summary: "Full-spectrum sweep", category: "Core" }];
+
+    const groups = new Map();
+    patterns.forEach((pattern) => {
+      const category = pattern.category || "Patterns";
+      if (!groups.has(category)) groups.set(category, []);
+      groups.get(category).push(pattern);
+    });
+
+    refs.patternSelect.innerHTML = "";
+    groups.forEach((items, category) => {
+      const optgroup = document.createElement("optgroup");
+      optgroup.label = category;
+      items.forEach((pattern) => {
+        const option = document.createElement("option");
+        option.value = pattern.id;
+        option.textContent = pattern.label;
+        option.selected = pattern.id === selected;
+        optgroup.appendChild(option);
+      });
+      refs.patternSelect.appendChild(optgroup);
+    });
+
+    const descriptor = activePatternDescriptor(selected);
+    safeText("patternSummaryTitle", descriptor?.label || titleCase(selected));
+    safeText("patternSummaryText", descriptor?.summary || "Pattern ready.");
+  }
+
+  async function loadPatterns() {
+    state.patterns = await fetchJson("/api/patterns");
+  }
+
   function updateHeader(snapshot) {
     const project = snapshot.project;
     const counts = projectCounts(project);
     const connected = (snapshot.controller_status || []).filter((item) => item.connected).length;
     const totalControllers = (project.controllers || []).length;
     const firstMode = project.controllers?.[0]?.mode || "mock";
+    const descriptor = activePatternDescriptor(project.playback?.pattern || "");
 
     safeText("projectName", project.name || "Custom LED Controller");
-    safeText("activePatternName", titleCase(project.playback?.pattern || "—"));
+    safeText("activePatternName", descriptor?.label || titleCase(project.playback?.pattern || "—"));
     safeText("connectedCount", `${connected} / ${totalControllers}`);
     safeText("totalLedCount", String(counts.totalLeds));
-    safeText("heroPatternTitle", titleCase(project.playback?.pattern || "—"));
+    safeText("heroPatternTitle", descriptor?.label || titleCase(project.playback?.pattern || "—"));
     safeText("heroMeta", `${totalControllers} controllers · ${counts.totalLeds} LEDs · ${counts.zoneCount} zones`);
     safeText("zoneCount", String(counts.zoneCount));
     safeText("segmentCount", String(counts.segmentCount));
@@ -226,22 +258,16 @@
     safeText("speedValue", `${Number(project.playback.speed ?? 1).toFixed(1)}x`);
     safeText("brightnessValue", Number(project.playback.brightness ?? 0.75).toFixed(2));
 
-    if (refs.patternStrip) {
-      refs.patternStrip.innerHTML = "";
-      patternOptions.forEach((patternName) => {
-        const button = document.createElement("button");
-        button.className = "pattern-chip";
-        button.innerHTML = `<span class="pattern-name">${titleCase(patternName)}</span><span class="pattern-sub">${patternDescriptions[patternName] || ""}</span>`;
-        button.classList.toggle("active", patternName === project.playback.pattern);
-        button.addEventListener("click", () => {
-          project.playback.pattern = patternName;
-          updateHeader(state.snapshot);
-          bindPlayback(project);
-          syncProjectEditor();
-          queueProjectSave(`Selected ${titleCase(patternName)}.`);
-        });
-        refs.patternStrip.appendChild(button);
-      });
+    renderPatternSelector(project);
+
+    if (refs.patternSelect) {
+      refs.patternSelect.onchange = () => {
+        project.playback.pattern = refs.patternSelect.value;
+        updateHeader(state.snapshot);
+        renderPatternSelector(project);
+        syncProjectEditor();
+        queueProjectSave(`Selected ${activePatternDescriptor(project.playback.pattern)?.label || titleCase(project.playback.pattern)}.`);
+      };
     }
 
     if (fps) {
@@ -864,6 +890,7 @@
     setStatus("Loading…");
 
     try {
+      await loadPatterns();
       await reloadSnapshot();
       setStatus("Loaded project.");
     } catch (error) {

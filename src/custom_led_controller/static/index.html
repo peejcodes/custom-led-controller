@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <title>Custom LED Controller</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/static/styles.css?v=4" />
+  <link rel="stylesheet" href="/static/styles.css?v=5" />
 </head>
 <body>
   <div class="shell">
@@ -158,7 +158,16 @@
                     <h3>Pattern select</h3>
                   </div>
                 </div>
-                <div id="patternStrip" class="pattern-strip"></div>
+                <div class="pattern-selector-card">
+                  <label class="form-field">
+                    <span>Pattern</span>
+                    <select id="patternSelect"></select>
+                  </label>
+                  <div class="pattern-meta-card">
+                    <strong id="patternSummaryTitle">Rainbow</strong>
+                    <p id="patternSummaryText">Full-spectrum sweep</p>
+                  </div>
+                </div>
               </div>
 
               <div class="dock-block">

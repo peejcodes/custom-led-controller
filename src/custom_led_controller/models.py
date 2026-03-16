@@ -5,17 +5,6 @@ from typing import List, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-class PatternKind(str, Enum):
-    SOLID = "solid"
-    CHASE = "chase"
-    PULSE = "pulse"
-    WAVE = "wave"
-    RAINBOW = "rainbow"
-    STROBE = "strobe"
-    FIRE = "fire"
-    RAIN = "rain"
-
-
 class TransportMode(str, Enum):
     MOCK = "mock"
     SERIAL = "serial"
@@ -45,12 +34,18 @@ class PaletteSlot(BaseModel):
 
 
 class PlaybackSettings(BaseModel):
-    pattern: PatternKind = PatternKind.RAINBOW
+    pattern: str = "rainbow"
     fps: int = Field(default=30, ge=1, le=120)
     speed: float = Field(default=1.0, ge=0.01, le=20.0)
     brightness: float = Field(default=0.75, ge=0.0, le=1.0)
     intensity: float = Field(default=1.0, ge=0.0, le=2.0)
     seed: int = 42
+
+    @field_validator("pattern")
+    @classmethod
+    def normalize_pattern(cls, value: str) -> str:
+        value = str(value or "").strip()
+        return value or "rainbow"
 
 
 class OutputConfig(BaseModel):
@@ -64,7 +59,7 @@ class OutputConfig(BaseModel):
 class ControllerConfig(BaseModel):
     id: str
     name: str
-    mode: TransportMode = TransportMode.MOCK
+    mode: Literal["mock", "serial"] = "mock"
     port: str = "mock"
     baudrate: int = 921600
     enabled: bool = True
@@ -144,7 +139,7 @@ class ProjectConfig(BaseModel):
 class ControllerStatus(BaseModel):
     controller_id: str
     connected: bool
-    mode: TransportMode
+    mode: Literal["mock", "serial"]
     detail: str = "idle"
     last_frame_at: float | None = None
 
@@ -169,3 +164,11 @@ class PreviewResponse(BaseModel):
     project_name: str
     server_time: float
     frames: List[ControllerFrame]
+
+
+class PatternDescriptor(BaseModel):
+    id: str
+    label: str
+    summary: str
+    category: str
+    legacy: bool = False
